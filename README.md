@@ -2,7 +2,7 @@
 
 An open-source pipeline to build and manage small, high‑quality “golden sets” for RAG evaluation. It organizes the workflow into clear stages — embeddings → retrieval → merge → LLM judge → prune → rank — with shared plumbing, YAML configs, and per-run workspaces.
 
-The package lives under `rag_gs/` and exposes CLI commands for each stage. Legacy scripts remain for reference.
+The package lives under `rag_gs/` and exposes CLI commands for each stage.
 
 ## Features
 
@@ -66,18 +66,10 @@ Key artifacts by stage:
 - S5 (prune): grade-bucketed subset (35+)
 - S6 (rank): stabilized Top‑20 ordering
 
-## Legacy Scripts (reference)
+## Ranking Refinement (S6)
 
-This repo includes earlier standalone scripts that perform the same stages step by step. They remain for reference and for simple runs; the package CLIs are the preferred interface.
+Stage 6 runs a ranking refinement engine that repeatedly samples small batches of passages (listwise, typically 5 at a time), asks an LLM judge to order them, and updates passage scores using a Plackett–Luce‑style learning rule. It accumulates stable pairwise preferences and locks them into a DAG when confirmed or sufficiently separated by a margin, then recomputes the global order consistent with those locks. The process continues until the Top‑20 list remains unchanged for a configured number of turns, yielding a stable, high‑confidence Top‑20.
 
-- `script1_query_embedding.py`: generate Voyage embeddings for question rewrites
-- `script2_retrieval.py`: kNN retrieval from Elasticsearch
-- `script3_merge.py`: reciprocal-rank fusion (RRF)
-- `script4_score_gpt5.py`: LLM grading on 1–5 scale
-- `script5_prune_40plus.py`: build 35+ subset by grade buckets
-- `script6_rank_top20.py`: listwise ranking to a stable Top‑20
-
-See comments in each script and the artifacts described below.
 
 ## Data Artifacts (script outputs)
 
