@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+.venv/
+venv/
+.pytest_cache/
+
+# Project data
+data/
+cache/
+logs/
+manifests/
+
+# OS
+.DS_Store
+
+# Local config
+configs/local.yaml
+.env
+
+legacy_original/
+ 
+# Dev dumps (ignore scripts and generated txt)
+dump_*.py
+project_dump.txt
+refactor_dump.txt
+
+# Question packs: ignore all, keep example
+configs/questions/*.yaml
+!configs/questions/example.yaml

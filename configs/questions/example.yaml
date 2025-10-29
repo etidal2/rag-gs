@@ -1,0 +1,9 @@
+questions:
+  - qid: Q1
+    text: "Example: What are the key points about YOUR TOPIC?"
+    text_rewrite: "key points about YOUR TOPIC"
+    tags: [example, generic, en]
+    bm25_query:
+      query:
+        match:
+          text: "key points about YOUR TOPIC"

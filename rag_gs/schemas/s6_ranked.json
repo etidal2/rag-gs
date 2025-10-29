@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["qid", "final_rank", "final_score", "doc_id"],
+  "properties": {
+    "qid": {"type": "string"},
+    "final_rank": {"type": "integer"},
+    "final_score": {"type": "number"},
+    "exposures": {"type": ["integer", "null"]},
+    "info": {"type": ["number", "null"]},
+    "doc_id": {"type": "string"}
+  }
+}
+

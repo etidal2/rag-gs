@@ -1,0 +1,16 @@
+profile: thorough
+
+global:
+  dense_k: 50
+  sparse_k: 50
+
+s1:
+  max_voyage_batch: 16
+
+s3:
+  rrf_c: 60.0
+
+s6:
+  stability_turns: 15
+  confirmations_before_lock: 2
+

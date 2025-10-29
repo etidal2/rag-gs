@@ -1,0 +1,16 @@
+profile: fast
+
+global:
+  dense_k: 20
+  sparse_k: 20
+
+s1:
+  max_voyage_batch: 8
+
+s3:
+  rrf_c: 30.0
+
+s6:
+  stability_turns: 5
+  confirmations_before_lock: 1
+

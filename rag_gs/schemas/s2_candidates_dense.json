@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["qid", "doc_id", "rank_dense", "score_cos", "score_es", "retrieval"],
+  "properties": {
+    "qid": {"type": "string"},
+    "question": {"type": "string"},
+    "query_rewrite": {"type": "string"},
+    "doc_id": {"type": "string"},
+    "text": {"type": ["string", "null"]},
+    "metadata": {"type": ["object", "null"]},
+    "rank_dense": {"type": "integer"},
+    "score_cos": {"type": "number"},
+    "score_es": {"type": "number"},
+    "vector_field": {"type": "string"},
+    "similarity": {"type": "string"},
+    "embed_dim": {"type": "integer"},
+    "retrieval": {"const": "dense_vector"}
+  }
+}
+

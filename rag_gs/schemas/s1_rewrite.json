@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["qid", "text", "text_rewrite", "embedding"],
+  "properties": {
+    "qid": {"type": "string"},
+    "text": {"type": "string"},
+    "text_rewrite": {"type": "string"},
+    "embedding": {
+      "type": "array",
+      "items": {"type": "number"},
+      "minItems": 1024,
+      "maxItems": 1024
+    },
+    "model": {"type": "string"},
+    "input_type": {"type": "string"},
+    "output_dimension": {"type": "integer"},
+    "truncation": {"type": "boolean"},
+    "bm25_query": {"type": "object"},
+    "tags": {
+      "type": ["array", "null"],
+      "items": {"type": "string"}
+    }
+  }
+}

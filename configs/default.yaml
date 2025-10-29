@@ -1,0 +1,47 @@
+profile: default
+
+global:
+  dense_k: 50
+  sparse_k: 50
+
+s1:
+  model_name: voyage-3.5
+  input_type: query
+  output_dimension: 1024
+  truncation: true
+  max_voyage_batch: 16
+
+s2:
+  es_url: ${ES_URL}
+  es_index: journal_articles_voyage1024_knn_f32_i8
+  vector_field: vector_f32
+  similarity: cosine
+  dense_top_k: 50
+  sparse_top_k: 50
+
+s3:
+  rrf_c: 60.0
+
+s4:
+  model: gpt-5
+  temperature: 1.0
+  top_p: 1.0
+
+s5:
+  prune_min: 35
+
+s6:
+  model_name: gpt-5-judge
+  stability_turns: 15
+  confirmations_before_lock: 2
+  max_turns: 0
+  margin_z: 1.0
+  temperature: 1.0
+  top_p: 1.0
+  pl_step_size: 0.05
+  pl_step_min: 0.01
+  pl_clip: 0.20
+  pl_recenter_every: 50
+  pl_decay: inv_sqrt
+  seed: 12345
+

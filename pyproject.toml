@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rag-gs"
+version = "0.1.0"
+description = "RAG Golden Sets pipeline (embeddings → retrieval → merge → judge → prune → rank)"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{ name = "RAG GS", email = "devnull@example.com" }]
+license = { text = "MIT" }
+dependencies = [
+  "requests>=2.31.0",
+  "openai>=1.40.0",
+  "pydantic>=2.8.0",
+  "pyyaml>=6.0.1",
+]
+
+[project.scripts]
+raggs = "rag_gs.cli.pipeline:main"
+raggs-embed = "rag_gs.cli.embed:main"
+raggs-retrieve = "rag_gs.cli.retrieve:main"
+raggs-merge = "rag_gs.cli.merge:main"
+raggs-score = "rag_gs.cli.score:main"
+raggs-prune = "rag_gs.cli.prune:main"
+raggs-rank = "rag_gs.cli.rank:main"
+
+[project.optional-dependencies]
+dev = [
+  "black>=24.8.0",
+  "ruff>=0.6.9",
+  "isort>=5.13.2",
+  "pytest>=8.2.0",
+  "mypy>=1.11.0",
+  "types-requests",
+  "types-PyYAML",
+  "jsonschema>=4.23.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["rag_gs*"]

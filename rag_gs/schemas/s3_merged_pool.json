@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["qid", "doc_id", "rrf_score", "rank_rrf"],
+  "properties": {
+    "qid": {"type": "string"},
+    "question": {"type": "string"},
+    "query_rewrite": {"type": "string"},
+    "doc_id": {"type": "string"},
+    "text": {"type": ["string", "null"]},
+    "metadata": {"type": ["object", "null"]},
+    "source": {"type": "string"},
+    "rank_dense": {"type": ["integer", "null"]},
+    "rank_sparse": {"type": ["integer", "null"]},
+    "score_cos": {"type": ["number", "null"]},
+    "score_es": {"type": ["number", "null"]},
+    "score_bm25": {"type": ["number", "null"]},
+    "rrf_score": {"type": "number"},
+    "rank_rrf": {"type": "integer"}
+  }
+}
+

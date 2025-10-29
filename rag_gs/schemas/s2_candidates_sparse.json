@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["qid", "doc_id", "rank_sparse", "score_bm25", "retrieval"],
+  "properties": {
+    "qid": {"type": "string"},
+    "question": {"type": "string"},
+    "query_rewrite": {"type": "string"},
+    "bm25_query": {"type": ["object", "string", "null"]},
+    "doc_id": {"type": "string"},
+    "text": {"type": ["string", "null"]},
+    "metadata": {"type": ["object", "null"]},
+    "rank_sparse": {"type": "integer"},
+    "score_bm25": {"type": "number"},
+    "similarity": {"type": "string"},
+    "retrieval": {"const": "sparse_bm25"}
+  }
+}
+

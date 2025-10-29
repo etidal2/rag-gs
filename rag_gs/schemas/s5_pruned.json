@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["qid", "doc_id", "grade_1_5", "cut_stage", "cut_size"],
+  "properties": {
+    "qid": {"type": "string"},
+    "doc_id": {"type": "string"},
+    "grade_1_5": {"type": "integer", "minimum": 1, "maximum": 5},
+    "cut_stage": {"type": "string"},
+    "cut_size": {"type": "integer"},
+    "cut_ts": {"type": "string"}
+  }
+}
+
