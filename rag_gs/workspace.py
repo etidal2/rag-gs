@@ -7,7 +7,8 @@ from typing import Optional
 
 
 ROOT = Path(__file__).resolve().parents[1]
-DATA_ROOT = ROOT.parent / "data"
+# Keep run artifacts inside the repository under ./data to simplify inspection
+DATA_ROOT = ROOT / "data"
 
 
 def default_run_id() -> str:
@@ -61,4 +62,3 @@ class RunPaths:
     def s6_ranked_path(self, qid: str) -> Path:
         seg = q_segment(qid)
         return self.q_dir(qid) / "s6_ranked" / f"{seg}.top20.jsonl"
-
