@@ -18,6 +18,8 @@
 </head>
 <body>
   <header>
+    <label for="runIdInput">Run ID:</label>
+    <input type="text" id="runIdInput" value="demo" style="padding: 6px 10px; font-size: 14px; width: 150px;" />
     <label for="qidSelect">Question:</label>
     <select id="qidSelect">
       <option value="Q1">Q1</option>
@@ -48,6 +50,7 @@
     const listEl = document.getElementById('list');
     const titleEl = document.getElementById('questionTitle');
     const statusEl = document.getElementById('status');
+    const runIdEl = document.getElementById('runIdInput');
     const selectEl = document.getElementById('qidSelect');
     const stageEl = document.getElementById('stageSelect');
     const sortEl = document.getElementById('sortBy');
@@ -67,6 +70,7 @@
     }
 
     async function loadQ(qid) {
+      const runId = runIdEl.value.trim() || 'demo';
       const seg = qidToSegment(qid);
       const stage = stageEl.value || 's4';
       const isS6 = stage === 's6';
@@ -76,7 +80,7 @@
       titleEl.textContent = 'Question';
       try {
         if (isS6) {
-          const rankedPath = `data/${seg}/s6_ranked/${seg}.top20.jsonl`;
+          const rankedPath = `data/runs/${runId}/${seg}/s6_ranked/${seg}.top20.jsonl`;
           const ranked = await fetchJSONL(rankedPath);
           if (!ranked.length) {
             throw new Error(`Aucune donnée dans ${rankedPath}`);
@@ -109,8 +113,8 @@
           listEl.appendChild(frag);
           statusEl.textContent = `OK (${rows.length} items)`;
         } else {
-          const scoresPath = `data/${seg}/s4_scores/${seg}.gpt5_scores.jsonl`;
-          const mergePath  = `data/${seg}/s3_merge/${seg}.merge.jsonl`;
+          const scoresPath = `data/runs/${runId}/${seg}/s4_scores/${seg}.gpt5_scores.jsonl`;
+          const mergePath  = `data/runs/${runId}/${seg}/s3_merge/${seg}.merge.jsonl`;
           const [scores, merged] = await Promise.all([
             fetchJSONL(scoresPath),
             fetchJSONL(mergePath),
@@ -174,8 +178,11 @@
       }
     }
 
+    runIdEl.addEventListener('change', () => loadQ(selectEl.value));
+    runIdEl.addEventListener('blur', () => loadQ(selectEl.value));
     selectEl.addEventListener('change', () => loadQ(selectEl.value));
     stageEl.addEventListener('change', () => loadQ(selectEl.value));
+    sortEl.addEventListener('change', () => loadQ(selectEl.value));
     // auto-load défaut
     loadQ(selectEl.value);
   </script>
