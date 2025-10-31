@@ -7,9 +7,16 @@ from typing import Any, Dict, Optional
 
 import yaml
 
+# Optional .env support (opt-in via RAGGS_LOAD_DOTENV)
+try:
+    from dotenv import load_dotenv  # type: ignore
+except Exception:
+    load_dotenv = None  # type: ignore
+
 
 ROOT = Path(__file__).resolve().parents[2]
 CONFIG_DIR = ROOT / "configs"
+TRUTHY_FLAGS = {"1", "true", "yes", "on"}
 
 
 def _read_yaml(path: Path) -> Dict[str, Any]:
@@ -34,6 +41,20 @@ def _merge_dicts(base: Dict[str, Any], override: Dict[str, Any]) -> Dict[str, An
 
 def _env(name: str, default: Optional[str] = None) -> Optional[str]:
     return os.getenv(name, default)
+
+
+def _maybe_load_dotenv() -> None:
+    """Opt-in loading of .env without overriding existing env vars."""
+    flag = (os.getenv("RAGGS_LOAD_DOTENV", "").strip().lower())
+    if flag not in TRUTHY_FLAGS or load_dotenv is None:
+        return
+    env_path = ROOT / ".env"
+    if not env_path.exists():
+        return
+    try:
+        load_dotenv(env_path, override=False)
+    except Exception:
+        pass
 
 
 @dataclass
@@ -140,6 +161,9 @@ def _apply_env_overrides(cfg: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def load_config() -> Config:
+    # Load .env early so env-based profile/overrides can see it
+    _maybe_load_dotenv()
+
     default = _read_yaml(CONFIG_DIR / "default.yaml")
     local = _read_yaml(CONFIG_DIR / "local.yaml")
     cfg = _merge_dicts(default, local)

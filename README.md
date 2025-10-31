@@ -9,8 +9,6 @@ The package lives under `rag_gs/` and exposes CLI commands for each stage.
 - Installable Python package with CLI entrypoints for each stage.
 - Structured per-run outputs under `data/runs/<run_id>/...`.
 - YAML configuration with environment overrides and optional pipeline profiles.
-- Centralized judge prompts and consistent scoring/ranking flows.
-- Pre-commit hooks with formatters, linters, and secret scanning.
 
 ## Installation
 
@@ -40,18 +38,17 @@ Or run individual stages:
 
 ## Configuration
 
-Create `.env` with required keys and optional tuning knobs:
+Create `.env` with only the required secrets. All other tuning lives in YAML.
 
-- Required: `VOYAGE_API_KEY`, `ES_URL`, `OPENAI_API_KEY`
-- Optional: `MAX_VOYAGE_BATCH`, `S4_QIDS`, `S5_QIDS`, `S6_QIDS`, `S6_*` knobs
+- Required env: `VOYAGE_API_KEY`, `ES_URL`, `OPENAI_API_KEY`
 
-YAML config files live in `configs/`:
+YAML config files live in `configs/` and contain all knobs (models, batch sizes, ranking settings):
 
 - `configs/default.yaml` (base)
 - `configs/local.yaml` (local overrides; ignored by git)
 - `configs/pipelines/<name>.yaml` (profile overrides; select via `--profile` or `RAGGS_PROFILE`)
 
-Environment variables have highest precedence for key settings.
+Environment variables can override some keys, but the recommended source of truth is YAML (use `configs/local.yaml` for machine‑local overrides).
 
 ## Data Layout
 
@@ -81,28 +78,25 @@ Stage 6 runs a ranking refinement engine that repeatedly samples small batches o
 - `data/qXX/s6_ranked/qXX.top20.jsonl`: stabilized Top‑20
 - Plus caches, logs, and manifests per stage
 
-## Setup (scripts)
+## Setup
 
-Set required environment variables in `.env`:
+- Put secrets in `.env`. By default the app does not auto‑load it. You can:
+  - Export in your shell: `set -a; source .env; set +a`
+  - Or opt‑in auto‑load by setting `RAGGS_LOAD_DOTENV=1` (requires `python-dotenv`), which reads `.env` without overriding existing env.
+- Adjust non‑secret settings in YAML:
+  - Global defaults: `configs/default.yaml`
+  - Local overrides: `configs/local.yaml` (git‑ignored)
 
-- `VOYAGE_API_KEY`
-- `ES_URL`
-- `OPENAI_API_KEY`
+## Usage
 
-Optional filters and tuning:
+Prefer the CLI commands provided by the package (see Quickstart above):
 
-- `S4_QIDS`, `S5_QIDS`, `S6_QIDS`
-- `MAX_VOYAGE_BATCH`, `S6_MODEL_NAME`, `S6_STABILITY_TURNS`, `S6_CONFIRMATIONS_BEFORE_LOCK`, `S6_*`
-
-## Usage (scripts)
-
-- Embeddings: `python script1_query_embedding.py`
-- Retrieval: `python script2_retrieval.py`
-- Merge (RRF): `python script3_merge.py`
-- Grade (LLM): `S4_QIDS=Q1 python script4_score_gpt5.py`
-- Prune (35+): `S5_QIDS=Q1 python script5_prune_40plus.py`
-- Rank (Top‑20): `S6_QIDS=Q1 python script6_rank_top20.py`
-- Stats/report: `python stats.py`
+- `raggs-embed` — embeddings for question rewrites
+- `raggs-retrieve` — dense/sparse retrieval
+- `raggs-merge` — RRF merge and rank
+- `raggs-score` — LLM grading (1–5)
+- `raggs-prune` — build 35+ subset by grade buckets
+- `raggs-rank` — listwise ranking to stabilized Top‑20
 
 ## CLI Summary (package)
 
