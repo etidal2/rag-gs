@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <title>Viewer LLM Scores</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 24px; }
+    header { display: flex; gap: 12px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
+    select { padding: 6px 10px; font-size: 14px; }
+    h1 { font-size: 18px; margin: 12px 0; }
+    .row { border: 1px solid #e2e2e2; border-radius: 6px; padding: 12px; margin: 10px 0; background: #fafafa; }
+    .meta { color: #444; font-size: 13px; margin-bottom: 6px; }
+    pre { white-space: pre-wrap; word-break: break-word; margin: 0; font: 13px/1.45 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+    .note { color: #666; font-size: 13px; }
+    #sortWrap { display: inline-flex; gap: 6px; align-items: center; }
+  </style>
+</head>
+<body>
+  <header>
+    <label for="qidSelect">Question:</label>
+    <select id="qidSelect">
+      <option value="Q1">Q1</option>
+      <option value="Q2">Q2</option>
+      <option value="Q3">Q3</option>
+      <option value="Q4">Q4</option>
+      <option value="Q5">Q5</option>
+    </select>
+    <label for="stageSelect">Jeu:</label>
+    <select id="stageSelect">
+      <option value="s4">S4 — Scores GPT-5</option>
+      <option value="s6">S6 — Top 20 final</option>
+    </select>
+    <span id="sortWrap">
+      <label for="sortBy">Trier:</label>
+      <select id="sortBy">
+        <option value="grade">grade_1_5 ↓, puis rank_rrf ↑</option>
+        <option value="source_grade">source ↑, puis grade_1_5 ↓, puis rank_rrf ↑</option>
+      </select>
+    </span>
+    <span id="status" class="note"></span>
+  </header>
+
+  <h1 id="questionTitle">Question</h1>
+  <div id="list"></div>
+
+  <script>
+    const listEl = document.getElementById('list');
+    const titleEl = document.getElementById('questionTitle');
+    const statusEl = document.getElementById('status');
+    const selectEl = document.getElementById('qidSelect');
+    const stageEl = document.getElementById('stageSelect');
+    const sortEl = document.getElementById('sortBy');
+    const sortWrap = document.getElementById('sortWrap');
+
+    function qidToSegment(qid) {
+      const n = parseInt(qid.slice(1), 10);
+      return 'q' + String(n).padStart(2, '0');
+    }
+
+    async function fetchJSONL(path) {
+      const res = await fetch(path);
+      if (!res.ok) throw new Error(`HTTP ${res.status} for ${path}`);
+      const text = await res.text();
+      const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+      return lines.map(l => JSON.parse(l));
+    }
+
+    async function loadQ(qid) {
+      const seg = qidToSegment(qid);
+      const stage = stageEl.value || 's4';
+      const isS6 = stage === 's6';
+      sortWrap.style.display = isS6 ? 'none' : 'inline-flex';
+      statusEl.textContent = `Chargement ${qid} (${stage.toUpperCase()})…`;
+      listEl.innerHTML = '';
+      titleEl.textContent = 'Question';
+      try {
+        if (isS6) {
+          const rankedPath = `data/${seg}/s6_ranked/${seg}.top20.jsonl`;
+          const ranked = await fetchJSONL(rankedPath);
+          if (!ranked.length) {
+            throw new Error(`Aucune donnée dans ${rankedPath}`);
+          }
+          const questionText = ranked[0]?.question || '(question indisponible)';
+          titleEl.textContent = questionText;
+          const rows = ranked.slice().sort((a, b) => {
+            const fa = typeof a.final_rank === 'number' ? a.final_rank : Number.MAX_SAFE_INTEGER;
+            const fb = typeof b.final_rank === 'number' ? b.final_rank : Number.MAX_SAFE_INTEGER;
+            return fa - fb;
+          });
+          const frag = document.createDocumentFragment();
+          rows.forEach(r => {
+            const div = document.createElement('div');
+            div.className = 'row';
+            const meta = document.createElement('div');
+            meta.className = 'meta';
+            const finalRank = r.final_rank ?? '—';
+            const grade = r.grade_1_5 ?? '—';
+            const source = r.source ?? '—';
+            const rankDense = (r.rank_dense ?? '—');
+            const rankSparse = (r.rank_sparse ?? '—');
+            meta.textContent = `#${finalRank} — grade_1_5=${grade} | source=${source} | rank_dense=${rankDense} | rank_sparse=${rankSparse} | doc_id=${r.doc_id ?? '—'}`;
+            const pre = document.createElement('pre');
+            pre.textContent = r.text || '(texte indisponible)';
+            div.appendChild(meta);
+            div.appendChild(pre);
+            frag.appendChild(div);
+          });
+          listEl.appendChild(frag);
+          statusEl.textContent = `OK (${rows.length} items)`;
+        } else {
+          const scoresPath = `data/${seg}/s4_scores/${seg}.gpt5_scores.jsonl`;
+          const mergePath  = `data/${seg}/s3_merge/${seg}.merge.jsonl`;
+          const [scores, merged] = await Promise.all([
+            fetchJSONL(scoresPath),
+            fetchJSONL(mergePath),
+          ]);
+
+          const questionText = (merged[0] && merged[0].question) ? merged[0].question : '(question indisponible)';
+          titleEl.textContent = questionText;
+
+          const idToText = new Map();
+          const idToSource = new Map();
+          for (const m of merged) {
+            if (m && m.doc_id) {
+              const key = String(m.doc_id);
+              idToText.set(key, m.text || '');
+              idToSource.set(key, m.source || '');
+            }
+          }
+
+          let rows = scores.map(s => ({
+            doc_id: s.doc_id,
+            grade_1_5: s.grade_1_5,
+            rank_rrf: s.rank_rrf,
+            source: s.source ?? idToSource.get(String(s.doc_id)) ?? '',
+            text: idToText.get(String(s.doc_id)) || '',
+          }));
+
+          const mode = sortEl.value || 'grade';
+          if (mode === 'source_grade') {
+            rows.sort((a, b) => {
+              const sa = String(a.source || '');
+              const sb = String(b.source || '');
+              if (sa < sb) return -1;
+              if (sa > sb) return 1;
+              const gd = (b.grade_1_5 - a.grade_1_5);
+              if (gd !== 0) return gd;
+              return ((a.rank_rrf ?? 1e9) - (b.rank_rrf ?? 1e9));
+            });
+          } else {
+            rows.sort((a, b) => (b.grade_1_5 - a.grade_1_5) || ((a.rank_rrf ?? 1e9) - (b.rank_rrf ?? 1e9)));
+          }
+
+          const frag = document.createDocumentFragment();
+          rows.forEach((r, i) => {
+            const div = document.createElement('div');
+            div.className = 'row';
+            const meta = document.createElement('div');
+            meta.className = 'meta';
+            meta.textContent = `#${i+1} — grade_1_5=${r.grade_1_5} | source=${r.source || '—'} | rank_rrf=${r.rank_rrf ?? '—'} | doc_id=${r.doc_id}`;
+            const pre = document.createElement('pre');
+            pre.textContent = r.text || '(texte indisponible)';
+            div.appendChild(meta);
+            div.appendChild(pre);
+            frag.appendChild(div);
+          });
+          listEl.appendChild(frag);
+          statusEl.textContent = `OK (${rows.length} items)`;
+        }
+      } catch (err) {
+        console.error(err);
+        statusEl.textContent = `Erreur: ${err.message}`;
+      }
+    }
+
+    selectEl.addEventListener('change', () => loadQ(selectEl.value));
+    stageEl.addEventListener('change', () => loadQ(selectEl.value));
+    // auto-load défaut
+    loadQ(selectEl.value);
+  </script>
+</body>
+</html>
